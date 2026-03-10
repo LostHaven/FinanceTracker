@@ -1,4 +1,4 @@
-const CACHE_NAME = 'financetracker-v2';
+const CACHE_NAME = 'financetracker-v3';
 
 self.addEventListener('install', event => {
     self.skipWaiting();
@@ -10,12 +10,14 @@ self.addEventListener('activate', event => {
             return Promise.all(
                 cacheNames.map(cacheName => caches.delete(cacheName))
             );
-        })
+        }).then(() => self.clients.claim())
     );
 });
 
 self.addEventListener('fetch', event => {
     event.respondWith(
-        fetch(event.request)
+        fetch(event.request).catch(() => {
+            return caches.match(event.request);
+        })
     );
 });
