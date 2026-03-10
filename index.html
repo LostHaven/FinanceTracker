@@ -537,6 +537,21 @@
             background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
             color: white;
         }
+
+        .currency-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            min-width: 150px;
+        }
+
+        .currency-select option {
+            background: #1a1a2e;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -605,6 +620,21 @@
     <!-- Stats Screen -->
     <div id="stats-screen" class="screen">
         <div class="stats-screen">
+            <div class="stats-section">
+                <h3>📊 Настройки</h3>
+                <div class="stat-row">
+                    <span>Валюта</span>
+                    <select id="currency-select" class="currency-select" onchange="changeCurrency()">
+                        <option value="₽">₽ RUB (Рубль)</option>
+                        <option value="$">$ USD (Доллар)</option>
+                        <option value="€">€ EUR (Евро)</option>
+                        <option value="₸">₸ KZT (Тенге)</option>
+                        <option value="₴">₴ UAH (Гривна)</option>
+                        <option value="¥">¥ CNY (Юань)</option>
+                        <option value="₿">₿ BTC (Биткоин)</option>
+                    </select>
+                </div>
+            </div>
             <div class="stats-section">
                 <h3>📉 Расходы по категориям</h3>
                 <div id="expense-stats"></div>
@@ -676,6 +706,7 @@
 
         let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
         let currentType = 'expense';
+        let currency = localStorage.getItem('currency') || '₽';
         
         const categories = {
             expense: ['🍔 Еда', '🚗 Транспорт', '🏠 Жильё', '💡 Коммуналка', '🎬 Развлечения', '🛒 Покупки', '🏥 Здоровье', '📚 Обучение', '📱 Связь', '🎁 Другое'],
@@ -684,7 +715,15 @@
         
         function init() {
             updateCategorySelect();
+            document.getElementById('currency-select').value = currency;
             refreshData();
+        }
+        
+        function changeCurrency() {
+            currency = document.getElementById('currency-select').value;
+            localStorage.setItem('currency', currency);
+            refreshData();
+            showToast('Валюта изменена!');
         }
         
         function updateCategorySelect() {
@@ -787,11 +826,11 @@
             const balance = income - expense;
             
             const balanceEl = document.getElementById('balance-amount');
-            balanceEl.textContent = balance.toLocaleString() + ' ₽';
+            balanceEl.textContent = balance.toLocaleString() + ' ' + currency;
             balanceEl.className = 'amount ' + (balance >= 0 ? 'positive' : 'negative');
             
-            document.getElementById('total-income').textContent = '+' + income.toLocaleString() + ' ₽';
-            document.getElementById('total-expense').textContent = '-' + expense.toLocaleString() + ' ₽';
+            document.getElementById('total-income').textContent = '+' + income.toLocaleString() + ' ' + currency;
+            document.getElementById('total-expense').textContent = '-' + expense.toLocaleString() + ' ' + currency;
             
             renderTransactions();
             renderStats();
@@ -816,7 +855,7 @@
                             <div class="date">${dateStr}</div>
                             ${t.description ? `<div class="description">${t.description}</div>` : ''}
                         </div>
-                        <div class="amount ${t.type}">${t.type === 'income' ? '+' : '-'}${t.amount.toLocaleString()} ₽</div>
+                        <div class="amount ${t.type}">${t.type === 'income' ? '+' : '-'}${t.amount.toLocaleString()} ${currency}</div>
                         <button class="delete-btn" onclick="deleteTransaction('${t.id}')">✕</button>
                     </div>
                 `;
@@ -837,12 +876,12 @@
             
             const expenseText = Object.entries(expenseByCategory)
                 .sort((a, b) => b[1] - a[1])
-                .map(([cat, amount]) => `<div class="stat-row"><span>${cat}</span><span class="value">${amount.toLocaleString()} ₽</span></div>`)
+                .map(([cat, amount]) => `<div class="stat-row"><span>${cat}</span><span class="value">${amount.toLocaleString()} ${currency}</span></div>`)
                 .join('') || '<div class="empty-state">Нет данных</div>';
             
             const incomeText = Object.entries(incomeByCategory)
                 .sort((a, b) => b[1] - a[1])
-                .map(([cat, amount]) => `<div class="stat-row"><span>${cat}</span><span class="value">${amount.toLocaleString()} ₽</span></div>`)
+                .map(([cat, amount]) => `<div class="stat-row"><span>${cat}</span><span class="value">${amount.toLocaleString()} ${currency}</span></div>`)
                 .join('') || '<div class="empty-state">Нет данных</div>';
             
             document.getElementById('expense-stats').innerHTML = expenseText;
@@ -851,8 +890,8 @@
             const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
             const totalExpense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
             
-            document.getElementById('total-income-all').textContent = totalIncome.toLocaleString() + ' ₽';
-            document.getElementById('total-expense-all').textContent = totalExpense.toLocaleString() + ' ₽';
+            document.getElementById('total-income-all').textContent = totalIncome.toLocaleString() + ' ' + currency;
+            document.getElementById('total-expense-all').textContent = totalExpense.toLocaleString() + ' ' + currency;
             document.getElementById('total-count').textContent = transactions.length;
         }
         
