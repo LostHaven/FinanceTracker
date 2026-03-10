@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FinanceTracker Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        
+        body {
+            background: #2c3e50;
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .header h1 {
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+        
+        .balance-card {
+            background: #34495e;
+            margin: 15px;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+        }
+        
+        .balance-card .label {
+            color: #bdc3c7;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .balance-card .amount {
+            font-size: 36px;
+            font-weight: bold;
+        }
+        
+        .balance-card .amount.positive { color: #2ecc71; }
+        .balance-card .amount.negative { color: #e74c3c; }
+        
+        .stats-row {
+            display: flex;
+            gap: 10px;
+            padding: 0 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            flex: 1;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+        }
+        
+        .stat-card.income { background: #27ae60; }
+        .stat-card.expense { background: #e74c3c; }
+        
+        .stat-card .amount {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .menu {
+            padding: 0 15px;
+        }
+        
+        .menu button {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            color: white;
+            transition: transform 0.1s;
+        }
+        
+        .menu button:active { transform: scale(0.98); }
+        .menu button.add { background: #3498db; }
+        .menu button.history { background: #9b59b6; }
+        .menu button.stats { background: #f39c12; }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #34495e;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .bottom-nav button {
+            background: none;
+            border: none;
+            color: #bdc3c7;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .bottom-nav button.active { color: #3498db; }
+        .bottom-nav button span { font-size: 20px; }
+        
+        .screen { display: none; }
+        .screen.active { display: block; }
+        
+        .form-group {
+            padding: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #bdc3c7;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #ecf0f1;
+            margin-bottom: 15px;
+        }
+        
+        .form-group button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            background: #27ae60;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .transactions-list {
+            padding: 15px;
+        }
+        
+        .transaction-item {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .transaction-item .info {
+            flex: 1;
+        }
+        
+        .transaction-item .category {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .transaction-item .date {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        .transaction-item .amount {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .transaction-item .amount.income { color: #27ae60; }
+        .transaction-item .amount.expense { color: #e74c3c; }
+        
+        .stats-screen { padding: 15px; }
+        
+        .stats-section {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .stats-section h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .stats-section p {
+            color: #7f8c8d;
+            line-height: 1.8;
+        }
+        
+        .type-toggle {
+            display: flex;
+            background: #ecf0f1;
+            border-radius: 8px;
+            padding: 3px;
+            margin-bottom: 15px;
+        }
+        
+        .type-toggle button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .type-toggle button.active {
+            background: #3498db;
+            color: white;
+        }
+        
+        .type-toggle button.expense.active { background: #e74c3c; }
+        .type-toggle button.income.active { background: #27ae60; }
+        
+        .empty-state {
+            text-align: center;
+            color: #bdc3c7;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>💰 FinanceTracker Pro</h1>
+    </div>
+    
+    <!-- Home Screen -->
+    <div id="home-screen" class="screen active">
+        <div class="balance-card">
+            <div class="label">Баланс</div>
+            <div class="amount positive" id="balance-amount">0 ₽</div>
+        </div>
+        
+        <div class="stats-row">
+            <div class="stat-card income">
+                <div>Доходы</div>
+                <div class="amount" id="total-income">0 ₽</div>
+            </div>
+            <div class="stat-card expense">
+                <div>Расходы</div>
+                <div class="amount" id="total-expense">0 ₽</div>
+            </div>
+        </div>
+        
+        <div class="menu">
+            <button class="add" onclick="showScreen('add')">+ Добавить транзакцию</button>
+            <button class="history" onclick="showScreen('history')">📋 История транзакций</button>
+            <button class="stats" onclick="showScreen('stats')">📊 Статистика</button>
+        </div>
+    </div>
+    
+    <!-- Add Transaction Screen -->
+    <div id="add-screen" class="screen">
+        <div class="form-group">
+            <label>Тип транзакции</label>
+            <div class="type-toggle">
+                <button class="expense active" id="btn-expense" onclick="setType('expense')">Расход</button>
+                <button class="income" id="btn-income" onclick="setType('income')">Доход</button>
+            </div>
+            
+            <label>Сумма</label>
+            <input type="number" id="amount-input" placeholder="Введите сумму" inputmode="decimal">
+            
+            <label>Категория</label>
+            <select id="category-select"></select>
+            
+            <label>Описание (необязательно)</label>
+            <input type="text" id="description-input" placeholder="Введите описание">
+            
+            <button onclick="saveTransaction()">Сохранить</button>
+        </div>
+    </div>
+    
+    <!-- History Screen -->
+    <div id="history-screen" class="screen">
+        <div class="transactions-list" id="transactions-list"></div>
+    </div>
+    
+    <!-- Stats Screen -->
+    <div id="stats-screen" class="screen">
+        <div class="stats-screen">
+            <div class="stats-section">
+                <h3>📉 Расходы по категориям</h3>
+                <p id="expense-stats">Нет данных</p>
+            </div>
+            <div class="stats-section">
+                <h3>📈 Доходы по категориям</h3>
+                <p id="income-stats">Нет данных</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <button onclick="showScreen('home')" id="nav-home" class="active">
+            <span>🏠</span>Главная
+        </button>
+        <button onclick="showScreen('add')" id="nav-add">
+            <span>➕</span>Добавить
+        </button>
+        <button onclick="showScreen('history')" id="nav-history">
+            <span>📋</span>История
+        </button>
+        <button onclick="showScreen('stats')" id="nav-stats">
+            <span>📊</span>Статистика
+        </button>
+    </div>
+
+    <script>
+        let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+        let currentType = 'expense';
+        
+        const categories = {
+            expense: ['Еда', 'Транспорт', 'Жилье', 'Коммуналка', 'Развлечения', 'Покупки', 'Здоровье', 'Обучение', 'Другое'],
+            income: ['Зарплата', 'Фриланс', 'Инвестиции', 'Подарок', 'Другое']
+        };
+        
+        function init() {
+            updateCategorySelect();
+            refreshData();
+        }
+        
+        function updateCategorySelect() {
+            const select = document.getElementById('category-select');
+            select.innerHTML = categories[currentType].map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+        
+        function setType(type) {
+            currentType = type;
+            document.getElementById('btn-expense').classList.toggle('active', type === 'expense');
+            document.getElementById('btn-income').classList.toggle('active', type === 'income');
+            updateCategorySelect();
+        }
+        
+        function saveTransaction() {
+            const amount = parseFloat(document.getElementById('amount-input').value);
+            const category = document.getElementById('category-select').value;
+            const description = document.getElementById('description-input').value;
+            
+            if (!amount || amount <= 0) {
+                alert('Введите корректную сумму');
+                return;
+            }
+            
+            const transaction = {
+                id: Date.now().toString(),
+                amount: amount,
+                category: category,
+                type: currentType,
+                description: description,
+                date: new Date().toISOString()
+            };
+            
+            transactions.unshift(transaction);
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            
+            document.getElementById('amount-input').value = '';
+            document.getElementById('description-input').value = '';
+            
+            alert('Транзакция добавлена!');
+            refreshData();
+            showScreen('home');
+        }
+        
+        function refreshData() {
+            const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const expense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            const balance = income - expense;
+            
+            document.getElementById('balance-amount').textContent = balance.toLocaleString() + ' ₽';
+            document.getElementById('balance-amount').className = 'amount ' + (balance >= 0 ? 'positive' : 'negative');
+            document.getElementById('total-income').textContent = income.toLocaleString() + ' ₽';
+            document.getElementById('total-expense').textContent = expense.toLocaleString() + ' ₽';
+            
+            renderTransactions();
+            renderStats();
+        }
+        
+        function renderTransactions() {
+            const list = document.getElementById('transactions-list');
+            
+            if (transactions.length === 0) {
+                list.innerHTML = '<div class="empty-state">Нет транзакций</div>';
+                return;
+            }
+            
+            list.innerHTML = transactions.map(t => {
+                const date = new Date(t.date);
+                const dateStr = date.toLocaleDateString('ru-RU') + ' ' + date.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
+                return `
+                    <div class="transaction-item">
+                        <div class="info">
+                            <div class="category">${t.category}</div>
+                            <div class="date">${dateStr}</div>
+                        </div>
+                        <div class="amount ${t.type}">${t.type === 'income' ? '+' : '-'}${t.amount.toLocaleString()} ₽</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function renderStats() {
+            const expenseByCategory = {};
+            const incomeByCategory = {};
+            
+            transactions.forEach(t => {
+                if (t.type === 'expense') {
+                    expenseByCategory[t.category] = (expenseByCategory[t.category] || 0) + t.amount;
+                } else {
+                    incomeByCategory[t.category] = (incomeByCategory[t.category] || 0) + t.amount;
+                }
+            });
+            
+            const expenseText = Object.entries(expenseByCategory)
+                .sort((a, b) => b[1] - a[1])
+                .map(([cat, amount]) => `${cat}: ${amount.toLocaleString()} ₽`)
+                .join('<br>') || 'Нет данных';
+            
+            const incomeText = Object.entries(incomeByCategory)
+                .sort((a, b) => b[1] - a[1])
+                .map(([cat, amount]) => `${cat}: ${amount.toLocaleString()} ₽`)
+                .join('<br>') || 'Нет данных';
+            
+            document.getElementById('expense-stats').innerHTML = expenseText;
+            document.getElementById('income-stats').innerHTML = incomeText;
+        }
+        
+        function showScreen(screen) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screen + '-screen').classList.add('active');
+            
+            document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById('nav-' + screen)?.classList.add('active');
+            
+            refreshData();
+        }
+        
+        // PWA Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+        
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,389 @@
+# FinanceTracker Pro - Kivy UI
+
+#:import get_color_from_hex kivy.utils.get_color_from_hex
+
+<HomeScreen>:
+    name: "home"
+    FloatLayout:
+        canvas.before:
+            Color:
+                rgb: get_color_from_hex("#2c3e50")
+            Rectangle:
+                size: self.size
+                pos: self.pos
+        
+        # Header
+        BoxLayout:
+            size_hint_y: None
+            height: dp(60)
+            pos_hint: {"top": 1}
+            canvas.before:
+                Color:
+                    rgb: get_color_from_hex("#2c3e50")
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+            
+            Label:
+                text: "FinanceTracker Pro"
+                font_size: sp(22)
+                bold: True
+                color: 1, 1, 1, 1
+        
+        # Balance Card
+        BoxLayout:
+            orientation: "vertical"
+            size_hint: 0.9, 0.35
+            pos_hint: {"center_x": 0.5, "top": 0.88}
+            canvas.before:
+                Color:
+                    rgb: get_color_from_hex("#34495e")
+                RoundedRectangle:
+                    size: self.size
+                    pos: self.pos
+                    radius: [15]
+            
+            Label:
+                text: "Баланс"
+                font_size: sp(14)
+                color: 0.7, 0.7, 0.7, 1
+                size_hint_y: None
+                height: dp(30)
+            
+            Label:
+                id: balance_label
+                text: "0 ₽"
+                font_size: sp(36)
+                bold: True
+                color: get_color_from_hex("#2ecc71")
+        
+        # Stats Row
+        BoxLayout:
+            size_hint: 0.9, 0.15
+            pos_hint: {"center_x": 0.5, "top": 0.48}
+            spacing: dp(10)
+            
+            BoxLayout:
+                orientation: "vertical"
+                canvas.before:
+                    Color:
+                        rgb: get_color_from_hex("#27ae60")
+                    RoundedRectangle:
+                        size: self.size
+                        pos: self.pos
+                        radius: [10]
+                
+                Label:
+                    text: "Доходы"
+                    font_size: sp(12)
+                    color: 0.8, 0.8, 0.8, 1
+                Label:
+                    id: income_label
+                    text: "0 ₽"
+                    font_size: sp(18)
+                    bold: True
+                    color: 1, 1, 1, 1
+            
+            BoxLayout:
+                orientation: "vertical"
+                canvas.before:
+                    Color:
+                        rgb: get_color_from_hex("#e74c3c")
+                    RoundedRectangle:
+                        size: self.size
+                        pos: self.pos
+                        radius: [10]
+                
+                Label:
+                    text: "Расходы"
+                    font_size: sp(12)
+                    color: 0.8, 0.8, 0.8, 1
+                Label:
+                    id: expense_label
+                    text: "0 ₽"
+                    font_size: sp(18)
+                    bold: True
+                    color: 1, 1, 1, 1
+        
+        # Menu Buttons
+        BoxLayout:
+            orientation: "vertical"
+            size_hint: 0.9, 0.35
+            pos_hint: {"center_x": 0.5, "top": 0.28}
+            spacing: dp(10)
+            
+            Button:
+                text: "+ Добавить транзакцию"
+                background_color: get_color_from_hex("#3498db")
+                background_normal: ""
+                font_size: sp(16)
+                on_press: root.manager.current = "add"
+            
+            Button:
+                text: "📋 История транзакций"
+                background_color: get_color_from_hex("#9b59b6")
+                background_normal: ""
+                font_size: sp(16)
+                on_press: root.manager.current = "transactions"
+            
+            Button:
+                text: "📊 Статистика"
+                background_color: get_color_from_hex("#f39c12")
+                background_normal: ""
+                font_size: sp(16)
+                on_press: root.manager.current = "statistics"
+
+
+<TransactionsScreen>:
+    name: "transactions"
+    BoxLayout:
+        orientation: "vertical"
+        
+        # Header
+        BoxLayout:
+            size_hint_y: None
+            height: dp(60)
+            canvas.before:
+                Color:
+                    rgb: get_color_from_hex("#2c3e50")
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+            
+            Button:
+                text: "← Назад"
+                size_hint_x: None
+                width: dp(100)
+                background_color: get_color_from_hex("#2c3e50")
+                background_normal: ""
+                on_press: root.manager.current = "home"
+            
+            Label:
+                text: "История транзакций"
+                font_size: sp(18)
+                bold: True
+                color: 1, 1, 1, 1
+        
+        # List
+        ScrollView:
+            do_scroll_x: False
+            
+            GridLayout:
+                id: transactions_list
+                cols: 1
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: dp(5)
+                padding: dp(10)
+
+
+<TransactionItem>:
+    size_hint_y: None
+    height: dp(80)
+    canvas.before:
+        Color:
+            rgb: get_color_from_hex("#ecf0f1")
+        RoundedRectangle:
+            size: self.size
+            pos: self.size
+            radius: [10]
+    
+    BoxLayout:
+        orientation: "vertical"
+        padding: dp(10)
+        spacing: dp(5)
+        
+        BoxLayout:
+            Label:
+                text: root.date
+                font_size: sp(12)
+                color: 0.5, 0.5, 0.5, 1
+                size_hint_x: 0.5
+            Label:
+                text: root.category
+                font_size: sp(12)
+                color: 0.3, 0.3, 0.3, 1
+                size_hint_x: 0.5
+                halign: "right"
+        
+        BoxLayout:
+            Label:
+                text: root.description
+                font_size: sp(11)
+                color: 0.4, 0.4, 0.4, 1
+        
+        Label:
+            text: root.amount
+            font_size: sp(18)
+            bold: True
+            color: root.type_color
+
+
+<AddTransactionScreen>:
+    name: "add"
+    BoxLayout:
+        orientation: "vertical"
+        
+        # Header
+        BoxLayout:
+            size_hint_y: None
+            height: dp(60)
+            canvas.before:
+                Color:
+                    rgb: get_color_from_hex("#2c3e50")
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+            
+            Button:
+                text: "← Назад"
+                size_hint_x: None
+                width: dp(100)
+                background_color: get_color_from_hex("#2c3e50")
+                background_normal: ""
+                on_press: root.manager.current = "home"
+            
+            Label:
+                text: "Новая транзакция"
+                font_size: sp(18)
+                bold: True
+                color: 1, 1, 1, 1
+        
+        # Form
+        ScrollView:
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                padding: dp(20)
+                spacing: dp(15)
+                
+                # Type
+                Label:
+                    text: "Тип транзакции"
+                    size_hint_y: None
+                    height: dp(30)
+                    font_size: sp(14)
+                
+                Spinner:
+                    id: type_spinner
+                    text: "Расход"
+                    values: ["Расход", "Доход"]
+                    size_hint_y: None
+                    height: dp(50)
+                    font_size: sp(16)
+                    on_text: root.on_type_change()
+                
+                # Amount
+                Label:
+                    text: "Сумма"
+                    size_hint_y: None
+                    height: dp(30)
+                    font_size: sp(14)
+                
+                TextInput:
+                    id: amount_input
+                    hint_text: "Введите сумму"
+                    multiline: False
+                    size_hint_y: None
+                    height: dp(50)
+                    font_size: sp(18)
+                    input_filter: "float"
+                
+                # Category
+                Label:
+                    text: "Категория"
+                    size_hint_y: None
+                    height: dp(30)
+                    font_size: sp(14)
+                
+                Spinner:
+                    id: category_spinner
+                    text: "Еда"
+                    values: Category.DEFAULT_CATEGORIES[TransactionType.EXPENSE]
+                    size_hint_y: None
+                    height: dp(50)
+                    font_size: sp(16)
+                
+                # Description
+                Label:
+                    text: "Описание (необязательно)"
+                    size_hint_y: None
+                    height: dp(30)
+                    font_size: sp(14)
+                
+                TextInput:
+                    id: description_input
+                    hint_text: "Введите описание"
+                    multiline: False
+                    size_hint_y: None
+                    height: dp(50)
+                    font_size: sp(16)
+                
+                # Save Button
+                Button:
+                    text: "Сохранить"
+                    background_color: get_color_from_hex("#27ae60")
+                    background_normal: ""
+                    size_hint_y: None
+                    height: dp(60)
+                    font_size: sp(18)
+                    bold: True
+                    on_press: root.save_transaction()
+
+
+<StatisticsScreen>:
+    name: "statistics"
+    BoxLayout:
+        orientation: "vertical"
+        
+        # Header
+        BoxLayout:
+            size_hint_y: None
+            height: dp(60)
+            canvas.before:
+                Color:
+                    rgb: get_color_from_hex("#2c3e50")
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+            
+            Button:
+                text: "← Назад"
+                size_hint_x: None
+                width: dp(100)
+                background_color: get_color_from_hex("#2c3e50")
+                background_normal: ""
+                on_press: root.manager.current = "home"
+            
+            Label:
+                text: "Статистика"
+                font_size: sp(18)
+                bold: True
+                color: 1, 1, 1, 1
+        
+        ScrollView:
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                padding: dp(20)
+                spacing: dp(15)
+                
+                Label:
+                    id: expense_label
+                    text: "Расходы по категориям"
+                    size_hint_y: None
+                    height: dp(200)
+                    font_size: sp(14)
+                    text_size: self.width, None
+                    valign: "top"
+                
+                Label:
+                    id: income_label
+                    text: "Доходы по категориям"
+                    size_hint_y: None
+                    height: dp(200)
+                    font_size: sp(14)
+                    text_size: self.width, None
+                    valign: "top"
