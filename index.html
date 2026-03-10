@@ -606,6 +606,9 @@
             
             <label>Описание</label>
             <input type="text" id="description-input" placeholder="Куда потратили/откуда получили">
+
+            <label>Дата</label>
+            <input type="date" id="date-input">
             
             <button onclick="saveTransaction()">Сохранить транзакцию</button>
         </div>
@@ -717,6 +720,7 @@
         function init() {
             updateCategorySelect();
             document.getElementById('currency-select').value = currency;
+            document.getElementById('date-input').valueAsDate = new Date();
             refreshData();
         }
         
@@ -743,10 +747,19 @@
             const amount = parseFloat(document.getElementById('amount-input').value);
             const category = document.getElementById('category-select').value;
             const description = document.getElementById('description-input').value;
+            const dateInput = document.getElementById('date-input').value;
             
             if (!amount || amount <= 0) {
                 alert('Введите корректную сумму');
                 return;
+            }
+            
+            let date;
+            if (dateInput) {
+                date = new Date(dateInput);
+                date.setHours(new Date().getHours() + 3);
+            } else {
+                date = new Date();
             }
             
             const transaction = {
@@ -755,7 +768,7 @@
                 category: category,
                 type: currentType,
                 description: description,
-                date: new Date().toISOString()
+                date: date.toISOString()
             };
             
             transactions.unshift(transaction);
@@ -763,6 +776,7 @@
             
             document.getElementById('amount-input').value = '';
             document.getElementById('description-input').value = '';
+            document.getElementById('date-input').valueAsDate = new Date();
             
             showToast('Транзакция добавлена! 🎉');
             refreshData();
