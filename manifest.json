@@ -1,21 +1,19 @@
 {
     "name": "FinanceTracker Pro",
     "short_name": "FinanceTracker",
-    "description": "Приложение для учёта финансов",
-    "start_url": "index.html",
+    "description": "Приложение для учёта личных финансов",
+    "start_url": "/",
     "display": "standalone",
-    "background_color": "#2c3e50",
-    "theme_color": "#2c3e50",
+    "background_color": "#1a1a2e",
+    "theme_color": "#1a1a2e",
+    "orientation": "portrait",
     "icons": [
         {
-            "src": "icon-192.png",
-            "sizes": "192x192",
-            "type": "image/png"
-        },
-        {
-            "src": "icon-512.png",
-            "sizes": "512x512",
-            "type": "image/png"
+            "src": "icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
         }
-    ]
+    ],
+    "categories": ["finance", "productivity"]
 }
