@@ -552,6 +552,127 @@
             background: #1a1a2e;
             color: white;
         }
+
+        .currency-rates {
+            padding: 15px;
+        }
+
+        .converter-box {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .converter-box h3 {
+            color: #00ffcc;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .converter-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .converter-row select, .converter-row input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+        }
+
+        .converter-row input {
+            flex: 2;
+        }
+
+        .converter-result {
+            text-align: center;
+            padding: 15px;
+            background: rgba(0, 255, 204, 0.1);
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #00ffcc;
+        }
+
+        .rates-table {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .rate-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .rate-item:last-child {
+            border-bottom: none;
+        }
+
+        .rate-item .flag {
+            font-size: 20px;
+            margin-right: 10px;
+        }
+
+        .rate-item .code {
+            font-weight: bold;
+            color: white;
+            min-width: 50px;
+        }
+
+        .rate-item .name {
+            flex: 1;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+        }
+
+        .rate-item .rate {
+            color: #00ffcc;
+            font-weight: bold;
+        }
+
+        .convert-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #00ffcc 0%, #00b8ff 100%);
+            color: #1a1a2e;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .update-time {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+            margin-top: 15px;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -598,7 +719,23 @@
                 <button class="income" id="btn-income" onclick="setType('income')">💰 Доход</button>
             </div>
             
-            <label>Сумма</label>
+            <div class="converter-box" style="margin-bottom: 15px; padding: 15px;">
+                <label style="font-size: 13px; color: #00ffcc; margin-bottom: 8px; display: block;">💱 Конвертация валют</label>
+                <div class="converter-row" style="margin-bottom: 8px;">
+                    <select id="trans-from-currency" class="currency-select" onchange="convertTransAmount()" style="flex: 1;">
+                        <option value="USD">$ USD</option>
+                        <option value="EUR">€ EUR</option>
+                        <option value="RUB" selected>₽ RUB</option>
+                        <option value="BYN">Br BYN</option>
+                        <option value="KZT">₸ KZT</option>
+                        <option value="UAH">₴ UAH</option>
+                    </select>
+                    <input type="number" id="trans-orig-amount" placeholder="Сумма" oninput="convertTransAmount()" style="flex: 1.5; padding: 10px;">
+                </div>
+                <div style="text-align: center; color: #00ffcc; font-size: 13px;" id="trans-converted">= 0 ₽</div>
+            </div>
+            
+            <label>Сумма (в основной валюте)</label>
             <input type="number" id="amount-input" placeholder="Введите сумму" inputmode="decimal">
             
             <label>Категория</label>
@@ -664,6 +801,53 @@
             </div>
         </div>
     </div>
+
+    <!-- Currency Rates Screen -->
+    <div id="currency-screen" class="screen">
+        <div class="currency-rates">
+            <button class="refresh-btn" onclick="fetchCurrencyRates()">🔄 Обновить курсы валют</button>
+            
+            <div class="converter-box">
+                <h3>💱 Конвертер валют</h3>
+                <div class="converter-row">
+                    <select id="from-currency" class="currency-select">
+                        <option value="USD">$ USD</option>
+                        <option value="EUR">€ EUR</option>
+                        <option value="RUB" selected>₽ RUB</option>
+                        <option value="BYN">Br BYN</option>
+                        <option value="KZT">₸ KZT</option>
+                        <option value="UAH">₴ UAH</option>
+                        <option value="CNY">¥ CNY</option>
+                        <option value="GBP">£ GBP</option>
+                        <option value="TRY">₺ TRY</option>
+                    </select>
+                    <input type="number" id="convert-amount" placeholder="Сумма" value="1000" oninput="convertCurrency()">
+                </div>
+                <div class="converter-row">
+                    <span style="color: rgba(255,255,255,0.5);">→</span>
+                    <select id="to-currency" class="currency-select" onchange="convertCurrency()">
+                        <option value="RUB" selected>₽ RUB</option>
+                        <option value="USD">$ USD</option>
+                        <option value="EUR">€ EUR</option>
+                        <option value="BYN">Br BYN</option>
+                        <option value="KZT">₸ KZT</option>
+                        <option value="UAH">₴ UAH</option>
+                        <option value="CNY">¥ CNY</option>
+                        <option value="GBP">£ GBP</option>
+                        <option value="TRY">₺ TRY</option>
+                    </select>
+                </div>
+                <div class="converter-result" id="convert-result">= 0 ₽</div>
+            </div>
+
+            <div class="converter-box">
+                <h3>📈 Курсы валют (к рублю)</h3>
+                <div class="rates-table" id="rates-table"></div>
+            </div>
+            
+            <div class="update-time" id="rates-update-time"></div>
+        </div>
+    </div>
     
     <!-- Confirm Dialog -->
     <div class="confirm-dialog" id="confirm-dialog">
@@ -687,6 +871,9 @@
         </button>
         <button onclick="showScreen('history')" id="nav-history">
             <span>📋</span>История
+        </button>
+        <button onclick="showScreen('currency')" id="nav-currency">
+            <span>💱</span>Валюты
         </button>
         <button onclick="showScreen('stats')" id="nav-stats">
             <span>📊</span>Статистика
@@ -712,6 +899,112 @@
         let currentType = 'expense';
         let currency = localStorage.getItem('currency') || '₽';
         
+        const currencyData = {
+            "RUB": { symbol: "₽", name: "Российский рубль", flag: "🇷🇺" },
+            "USD": { symbol: "$", name: "Доллар США", flag: "🇺🇸" },
+            "EUR": { symbol: "€", name: "Евро", flag: "🇪🇺" },
+            "BYN": { symbol: "Br", name: "Белорусский рубль", flag: "🇧🇾" },
+            "KZT": { symbol: "₸", name: "Казахский тенге", flag: "🇰🇿" },
+            "UAH": { symbol: "₴", name: "Украинская гривна", flag: "🇺🇦" },
+            "CNY": { symbol: "¥", name: "Китайский юань", flag: "🇨🇳" },
+            "GBP": { symbol: "£", name: "Фунт стерлингов", flag: "🇬🇧" },
+            "TRY": { symbol: "₺", name: "Турецкая лира", flag: "🇹🇷" }
+        };
+        
+        let currencyRates = {};
+        
+        async function fetchCurrencyRates() {
+            try {
+                const response = await fetch('https://api.frankfurter.app/latest?from=RUB');
+                const data = await response.json();
+                currencyRates = data.rates;
+                currencyRates['RUB'] = 1;
+                localStorage.setItem('currencyRates', JSON.stringify(currencyRates));
+                localStorage.setItem('ratesUpdateTime', new Date().toISOString());
+                renderRatesTable();
+                convertCurrency();
+                showToast('Курсы валют обновлены!');
+            } catch (e) {
+                const saved = localStorage.getItem('currencyRates');
+                if (saved) {
+                    currencyRates = JSON.parse(saved);
+                } else {
+                    currencyRates = { "RUB": 1, "USD": 0.011, "EUR": 0.010, "BYN": 0.035, "KZT": 4.8, "UAH": 0.42, "CNY": 0.078, "GBP": 0.0085, "TRY": 0.38 };
+                }
+                renderRatesTable();
+                convertCurrency();
+                showToast('Использованы сохранённые курсы');
+            }
+            updateRatesTime();
+        }
+        
+        function convertCurrency() {
+            const fromCurr = document.getElementById('from-currency').value;
+            const toCurr = document.getElementById('to-currency').value;
+            const amount = parseFloat(document.getElementById('convert-amount').value) || 0;
+            
+            if (fromCurr === toCurr) {
+                document.getElementById('convert-result').textContent = 
+                    '= ' + amount.toLocaleString() + ' ' + currencyData[toCurr].symbol;
+                return;
+            }
+            
+            const fromRate = currencyRates[fromCurr] || 1;
+            const toRate = currencyRates[toCurr] || 1;
+            
+            const rubAmount = amount / fromRate;
+            const result = rubAmount * toRate;
+            
+            document.getElementById('convert-result').textContent = 
+                '= ' + result.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + currencyData[toCurr].symbol;
+        }
+        
+        function convertTransAmount() {
+            const fromCurr = document.getElementById('trans-from-currency').value;
+            const amount = parseFloat(document.getElementById('trans-orig-amount').value) || 0;
+            const toCurr = 'RUB';
+            
+            if (fromCurr === toCurr) {
+                document.getElementById('trans-converted').textContent = '= ' + amount.toLocaleString() + ' ₽';
+                document.getElementById('amount-input').value = amount;
+                return;
+            }
+            
+            const fromRate = currencyRates[fromCurr] || 1;
+            const rubAmount = amount / fromRate;
+            
+            document.getElementById('trans-converted').textContent = 
+                '= ' + rubAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ₽';
+            document.getElementById('amount-input').value = rubAmount.toFixed(2);
+        }
+        
+        function renderRatesTable() {
+            const table = document.getElementById('rates-table');
+            const sortedCodes = Object.keys(currencyData).sort();
+            
+            table.innerHTML = sortedCodes.map(code => {
+                const rate = currencyRates[code] || 0;
+                const displayRate = code === 'RUB' ? '1.0000' : (1 / rate).toFixed(4);
+                return `
+                    <div class="rate-item">
+                        <span class="flag">${currencyData[code].flag}</span>
+                        <span class="code">${code}</span>
+                        <span class="name">${currencyData[code].name}</span>
+                        <span class="rate">${displayRate}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function updateRatesTime() {
+            const time = localStorage.getItem('ratesUpdateTime');
+            if (time) {
+                const date = new Date(time);
+                document.getElementById('rates-update-time').textContent = 
+                    'Обновлено: ' + date.toLocaleTimeString('ru-RU');
+            }
+        }
+        
         const categories = {
             expense: ['🍔 Еда', '🚗 Транспорт', '🏠 Жильё', '💡 Коммуналка', '🎬 Развлечения', '🛒 Покупки', '🏥 Здоровье', '📚 Обучение', '📱 Связь', '🎁 Другое'],
             income: ['💵 Зарплата', '💼 Фриланс', '📈 Инвестиции', '🎁 Подарок', '💰 Бизнес', '🎓 Стипендия', '💸 Другое']
@@ -721,6 +1014,16 @@
             updateCategorySelect();
             document.getElementById('currency-select').value = currency;
             document.getElementById('date-input').valueAsDate = new Date();
+            
+            const savedRates = localStorage.getItem('currencyRates');
+            if (savedRates) {
+                currencyRates = JSON.parse(savedRates);
+                renderRatesTable();
+                convertCurrency();
+                updateRatesTime();
+            }
+            fetchCurrencyRates();
+            
             refreshData();
         }
         
