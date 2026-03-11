@@ -810,14 +810,15 @@
                 <div class="stat-row">
                     <span>Валюта</span>
                     <select id="currency-select" class="currency-select" onchange="changeCurrency()">
-                        <option value="₽">₽ RUB (Рубль)</option>
-                        <option value="Br">Br BYN (Бел. рубль)</option>
-                        <option value="$">$ USD (Доллар)</option>
-                        <option value="€">€ EUR (Евро)</option>
-                        <option value="₸">₸ KZT (Тенге)</option>
-                        <option value="₴">₴ UAH (Гривна)</option>
-                        <option value="¥">¥ CNY (Юань)</option>
-                        <option value="₿">₿ BTC (Биткоин)</option>
+                        <option value="RUB">₽ RUB (Рубль)</option>
+                        <option value="BYN">Br BYN (Бел. рубль)</option>
+                        <option value="USD">$ USD (Доллар)</option>
+                        <option value="EUR">€ EUR (Евро)</option>
+                        <option value="KZT">₸ KZT (Тенге)</option>
+                        <option value="UAH">₴ UAH (Гривна)</option>
+                        <option value="CNY">¥ CNY (Юань)</option>
+                        <option value="GBP">£ GBP (Фунт)</option>
+                        <option value="TRY">₺ TRY (Лира)</option>
                     </select>
                 </div>
             </div>
@@ -850,6 +851,21 @@
     <!-- Currency Rates Screen -->
     <div id="currency-screen" class="screen">
         <div class="currency-rates">
+            <div class="converter-box">
+                <h3>💰 Основная валюта</h3>
+                <div class="stat-row" style="margin-bottom: 10px;">
+                    <span>Выберите валюту:</span>
+                    <select id="main-currency-select" class="currency-select" onchange="setMainCurrency(this.value)">
+                        <option value="RUB">₽ RUB (Рубль)</option>
+                        <option value="USD">$ USD (Доллар)</option>
+                        <option value="EUR">€ EUR (Евро)</option>
+                        <option value="BYN">Br BYN (Бел. рубль)</option>
+                        <option value="KZT">₸ KZT (Тенге)</option>
+                        <option value="UAH">₴ UAH (Гривна)</option>
+                    </select>
+                </div>
+            </div>
+            
             <button class="refresh-btn" id="refresh-rates-btn" onclick="fetchCurrencyRates()">🔄 Обновить курсы валют</button>
             
             <div class="converter-box">
@@ -953,7 +969,7 @@
 
         let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
         let currentType = 'expense';
-        let currency = localStorage.getItem('currency') || '₽';
+        let currency = localStorage.getItem('currency') || 'RUB';
         
         const currencyData = {
             "RUB": { symbol: "₽", name: "Российский рубль", flag: "🇷🇺" },
@@ -979,8 +995,9 @@
             "TRY": 35
         };
         
-        let currencyRates = {};
+            let currencyRates = {};
         let sellRates = {};
+        let baseCurrency = 'RUB';
         
         async function fetchCurrencyRates() {
             const btn = document.getElementById('refresh-rates-btn');
@@ -1137,8 +1154,13 @@
         };
         
         function init() {
+            currency = localStorage.getItem('currency') || 'RUB';
             updateCategorySelect();
             document.getElementById('currency-select').value = currency;
+            
+            const mainSelect = document.getElementById('main-currency-select');
+            if (mainSelect) mainSelect.value = currency;
+            
             document.getElementById('date-input').valueAsDate = new Date();
             
             const savedRates = localStorage.getItem('currencyRates');
@@ -1156,8 +1178,23 @@
         function changeCurrency() {
             currency = document.getElementById('currency-select').value;
             localStorage.setItem('currency', currency);
+            
+            const mainSelect = document.getElementById('main-currency-select');
+            if (mainSelect) mainSelect.value = currency;
+            
             refreshData();
-            showToast('Валюта изменена!');
+            showToast('Валюта изменена на ' + getCurrencySymbol(currency) + ' ' + currency + '!');
+        }
+        
+        function setMainCurrency(code) {
+            currency = code;
+            localStorage.setItem('currency', currency);
+            
+            const statsSelect = document.getElementById('currency-select');
+            if (statsSelect) statsSelect.value = currency;
+            
+            refreshData();
+            showToast('Валюта изменена на ' + getCurrencySymbol(currency) + ' ' + currency + '!');
         }
         
         function updateCategorySelect() {
@@ -1264,17 +1301,30 @@
             }, 2000);
         }
         
+        function convertToCurrency(amountRUB, toCurrency) {
+            if (toCurrency === 'RUB' || !currencyRates[toCurrency]) return amountRUB;
+            const rate = currencyRates[toCurrency] || 1;
+            return amountRUB / rate;
+        }
+        
+        function getCurrencySymbol(code) {
+            return currencyData[code]?.symbol || code;
+        }
+        
         function refreshData() {
-            const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-            const expense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            const incomeRUB = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const expenseRUB = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            
+            const income = convertToCurrency(incomeRUB, currency);
+            const expense = convertToCurrency(expenseRUB, currency);
             const balance = income - expense;
             
             const balanceEl = document.getElementById('balance-amount');
-            balanceEl.textContent = balance.toLocaleString() + ' ' + currency;
+            balanceEl.textContent = balance.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(currency);
             balanceEl.className = 'amount ' + (balance >= 0 ? 'positive' : 'negative');
             
-            document.getElementById('total-income').textContent = '+' + income.toLocaleString() + ' ' + currency;
-            document.getElementById('total-expense').textContent = '-' + expense.toLocaleString() + ' ' + currency;
+            document.getElementById('total-income').textContent = '+' + income.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(currency);
+            document.getElementById('total-expense').textContent = '-' + expense.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2}) + ' ' + getCurrencySymbol(currency);
             
             renderTransactions();
             renderStats();
@@ -1291,7 +1341,8 @@
             list.innerHTML = transactions.map(t => {
                 const date = new Date(t.date);
                 const dateStr = date.toLocaleDateString('ru-RU') + ' ' + date.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
-                const icon = t.type === 'income' ? '💰' : '💸';
+                const convertedAmount = convertToCurrency(t.amount, currency);
+                const symbol = getCurrencySymbol(currency);
                 return `
                     <div class="transaction-item">
                         <div class="info">
@@ -1299,7 +1350,7 @@
                             <div class="date">${dateStr}</div>
                             ${t.description ? `<div class="description">${t.description}</div>` : ''}
                         </div>
-                        <div class="amount ${t.type}">${t.type === 'income' ? '+' : '-'}${t.amount.toLocaleString()} ${currency}</div>
+                        <div class="amount ${t.type}">${t.type === 'income' ? '+' : '-'}${convertedAmount.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2})} ${symbol}</div>
                         <button class="delete-btn" onclick="deleteTransaction('${t.id}')">✕</button>
                     </div>
                 `;
@@ -1331,11 +1382,15 @@
             document.getElementById('expense-stats').innerHTML = expenseText;
             document.getElementById('income-stats').innerHTML = incomeText;
 
-            const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-            const totalExpense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            const totalIncomeRUB = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const totalExpenseRUB = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
             
-            document.getElementById('total-income-all').textContent = totalIncome.toLocaleString() + ' ' + currency;
-            document.getElementById('total-expense-all').textContent = totalExpense.toLocaleString() + ' ' + currency;
+            const totalIncome = convertToCurrency(totalIncomeRUB, currency);
+            const totalExpense = convertToCurrency(totalExpenseRUB, currency);
+            const symbol = getCurrencySymbol(currency);
+            
+            document.getElementById('total-income-all').textContent = totalIncome.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2}) + ' ' + symbol;
+            document.getElementById('total-expense-all').textContent = totalExpense.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2}) + ' ' + symbol;
             document.getElementById('total-count').textContent = transactions.length;
         }
         
