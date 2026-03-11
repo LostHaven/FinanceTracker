@@ -1270,9 +1270,12 @@
                 date = new Date();
             }
             
+            const transactionCurrency = document.getElementById('trans-from-currency').value;
+            
             const transaction = {
                 id: Date.now().toString(),
                 amount: amount,
+                currency: transactionCurrency,
                 category: category,
                 type: currentType,
                 description: description,
@@ -1343,10 +1346,21 @@
             }, 2000);
         }
         
-        function convertToCurrency(amountRUB, toCurrency) {
-            if (toCurrency === 'RUB' || !currencyRates[toCurrency]) return amountRUB;
-            const rate = currencyRates[toCurrency] || 1;
-            return amountRUB / rate;
+        function convertToCurrency(amount, fromCurrency, toCurrency) {
+            if (!fromCurrency) fromCurrency = 'RUB';
+            if (fromCurrency === toCurrency) return amount;
+            
+            if (Object.keys(currencyRates).length === 0) {
+                currencyRates = { ...defaultRates };
+            }
+            
+            const fromRate = currencyRates[fromCurrency] || 1;
+            const toRate = currencyRates[toCurrency] || 1;
+            
+            const usdAmount = amount / fromRate;
+            const result = usdAmount * toRate;
+            
+            return result;
         }
         
         function getCurrencySymbol(code) {
@@ -1354,11 +1368,15 @@
         }
         
         function refreshData() {
-            const incomeRUB = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-            const expenseRUB = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            const incomeRUB = transactions.filter(t => t.type === 'income').reduce((sum, t) => {
+                return sum + convertToCurrency(t.amount, t.currency || 'RUB', 'RUB');
+            }, 0);
+            const expenseRUB = transactions.filter(t => t.type === 'expense').reduce((sum, t) => {
+                return sum + convertToCurrency(t.amount, t.currency || 'RUB', 'RUB');
+            }, 0);
             
-            const income = convertToCurrency(incomeRUB, currency);
-            const expense = convertToCurrency(expenseRUB, currency);
+            const income = convertToCurrency(incomeRUB, 'RUB', currency);
+            const expense = convertToCurrency(expenseRUB, 'RUB', currency);
             const balance = income - expense;
             
             const balanceEl = document.getElementById('balance-amount');
@@ -1383,7 +1401,7 @@
             list.innerHTML = transactions.map(t => {
                 const date = new Date(t.date);
                 const dateStr = date.toLocaleDateString('ru-RU') + ' ' + date.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
-                const convertedAmount = convertToCurrency(t.amount, currency);
+                const convertedAmount = convertToCurrency(t.amount, t.currency || 'RUB', currency);
                 const symbol = getCurrencySymbol(currency);
                 return `
                     <div class="transaction-item">
@@ -1404,32 +1422,38 @@
             const incomeByCategory = {};
             
             transactions.forEach(t => {
+                const convertedAmount = convertToCurrency(t.amount, t.currency || 'RUB', currency);
                 if (t.type === 'expense') {
-                    expenseByCategory[t.category] = (expenseByCategory[t.category] || 0) + t.amount;
+                    expenseByCategory[t.category] = (expenseByCategory[t.category] || 0) + convertedAmount;
                 } else {
-                    incomeByCategory[t.category] = (incomeByCategory[t.category] || 0) + t.amount;
+                    incomeByCategory[t.category] = (incomeByCategory[t.category] || 0) + convertedAmount;
                 }
             });
             
+            const symbol = getCurrencySymbol(currency);
+            
             const expenseText = Object.entries(expenseByCategory)
                 .sort((a, b) => b[1] - a[1])
-                .map(([cat, amount]) => `<div class="stat-row"><span>${cat}</span><span class="value">${amount.toLocaleString()} ${currency}</span></div>`)
+                .map(([cat, amount]) => `<div class="stat-row"><span>${cat}</span><span class="value">${amount.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2})} ${symbol}</span></div>`)
                 .join('') || '<div class="empty-state">Нет данных</div>';
             
             const incomeText = Object.entries(incomeByCategory)
                 .sort((a, b) => b[1] - a[1])
-                .map(([cat, amount]) => `<div class="stat-row"><span>${cat}</span><span class="value">${amount.toLocaleString()} ${currency}</span></div>`)
+                .map(([cat, amount]) => `<div class="stat-row"><span>${cat}</span><span class="value">${amount.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2})} ${symbol}</span></div>`)
                 .join('') || '<div class="empty-state">Нет данных</div>';
             
             document.getElementById('expense-stats').innerHTML = expenseText;
             document.getElementById('income-stats').innerHTML = incomeText;
 
-            const totalIncomeRUB = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-            const totalExpenseRUB = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            const totalIncomeRUB = transactions.filter(t => t.type === 'income').reduce((sum, t) => {
+                return sum + convertToCurrency(t.amount, t.currency || 'RUB', 'RUB');
+            }, 0);
+            const totalExpenseRUB = transactions.filter(t => t.type === 'expense').reduce((sum, t) => {
+                return sum + convertToCurrency(t.amount, t.currency || 'RUB', 'RUB');
+            }, 0);
             
-            const totalIncome = convertToCurrency(totalIncomeRUB, currency);
-            const totalExpense = convertToCurrency(totalExpenseRUB, currency);
-            const symbol = getCurrencySymbol(currency);
+            const totalIncome = convertToCurrency(totalIncomeRUB, 'RUB', currency);
+            const totalExpense = convertToCurrency(totalExpenseRUB, 'RUB', currency);
             
             document.getElementById('total-income-all').textContent = totalIncome.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2}) + ' ' + symbol;
             document.getElementById('total-expense-all').textContent = totalExpense.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2}) + ' ' + symbol;
